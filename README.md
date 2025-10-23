@@ -60,7 +60,7 @@ show-rates --currency <str>
 
 ## Дополнительные возможности
 
-Реализовано логгирование на уровне INFO и ERROR в консоль, а также запись логов в файлы logs/actions.log и logs/parser.log.log
+Реализовано логгирование на уровне INFO и ERROR в консоль, а также запись логов в файлы logs/actions.log и logs/parser.log
 
 ### Тестовый сценарий
 
