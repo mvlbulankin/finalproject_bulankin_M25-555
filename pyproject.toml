@@ -1,0 +1,47 @@
+[project]
+name = "finalproject-bulankin-m25-555"
+version = "0.1.0"
+description = "simple currency trading platform"
+authors = [
+    {name = "Mikhail Bulankin",email = "you@example.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "prettytable (>=3.16.0,<4.0.0)",
+    "requests (>=2.32.5,<3.0.0)",
+]
+
+[tool.valutatrade]
+data_path = "data"
+rates_ttl_seconds = 300
+default_base_currency = "USD"
+log_path = "logs"
+log_level = "INFO"
+supported_currencies = ["USD", "EUR", "GBP", "RUB", "BTC", "ETH", "SOL"]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+packages = [
+    { include = "valutatrade_hub" },
+]
+
+[tool.poetry.scripts]
+project = "main:main"
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+exclude = ["venv", ".venv", "dist", "__pycache__"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = []
+
+[dependency-groups]
+dev = [
+    "ruff (>=0.14.0,<0.15.0)"
+]
