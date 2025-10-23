@@ -68,7 +68,7 @@ class User:
             "username": self._username,
             "hashed_password": self._hashed_password,
             "salt": self._salt,
-            "registration_date": self._registration_date.strftime("%Y-%m-%dT%H:%M:%S")
+            "registration_date": self._registration_date.strftime("%Y-%m-%dT%H:%M:%S"),
         }
 
     @classmethod
@@ -198,7 +198,7 @@ class Portfolio:
         }
         return {
             "user_id": self._user.user_id,
-            "wallets": wallets_dict
+            "wallets": wallets_dict,
         }
 
     @classmethod

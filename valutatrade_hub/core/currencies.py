@@ -4,7 +4,7 @@ from typing import Dict
 from .exceptions import CurrencyNotFoundError
 
 
-class Currency(ABC):#TODO фабричный метод get_currency() и обработка неизвестных кодов?
+class Currency(ABC):
     def __init__(self, name: str, code: str):
         if not name or not isinstance(name, str):
             raise ValueError("name не может быть пустой строкой")
@@ -24,7 +24,6 @@ class Currency(ABC):#TODO фабричный метод get_currency() и обр
     def get_display_info(self) -> str:
         pass
 
-# Реестр валют
 _CURRENCIES_REGISTRY: Dict[str, Currency] = {}
 
 def register_currency(currency: Currency):

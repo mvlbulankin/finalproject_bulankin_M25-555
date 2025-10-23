@@ -8,8 +8,7 @@ from valutatrade_hub.infra.settings import SettingsLoader
 logger = logging.getLogger("ValutaTrade")
 settings = SettingsLoader()
 
-
-def log_action(action: str):#TODO разобраться с комментами
+def log_action(action: str):
     """Декоратор для логирования операций."""
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
@@ -32,7 +31,7 @@ def log_action(action: str):#TODO разобраться с комментами
                     "amount": amount,
                     "rate": rate,
                     "base": base,
-                    "result": "OK"
+                    "result": "OK",
                 }
                 if verbose:
                     log_msg["context"] = "Детали изменений (было→стало)"
@@ -52,7 +51,7 @@ def log_action(action: str):#TODO разобраться с комментами
                     "base": base,
                     "result": "ERROR",
                     "error_type": type(e).__name__,
-                    "error_message": str(e)
+                    "error_message": str(e),
                 }
                 logger.error(" ".join(
                     [f'{k}="{v}"' for k, v in log_msg.items() if v is not None]

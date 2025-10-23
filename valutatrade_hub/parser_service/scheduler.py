@@ -6,7 +6,7 @@ from .updater import RatesUpdater
 
 logger = logging.getLogger("ValutaTrade")
 
-class RateScheduler:#TODO исправить текст сообщений
+class RateScheduler:
     def __init__(self, config: ParserConfig, interval_seconds: int = 3600):
         self.updater = RatesUpdater(config)
         self.interval = interval_seconds

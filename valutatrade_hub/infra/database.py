@@ -7,10 +7,10 @@ from ..core.utils import ensure_dir
 from ..infra.settings import SingletonMeta
 
 
-class DatabaseManager(metaclass=SingletonMeta):  # Используем тот же метакласс
+class DatabaseManager(metaclass=SingletonMeta):
     def __init__(self):
         self._lock = threading.Lock()
-        self.data_path: str = "data"  # Будет перезаписано из Settings
+        self.data_path: str = "data"
 
     def set_data_path(self, path: str):
         self.data_path = path
