@@ -11,11 +11,11 @@ class User:
 
     def __init__(
             self,
-            user_id: int,                 # уникальный идентификатор пользователя
-            username: str,                # имя пользователя
-            hashed_password: str,         # пароль в зашифрованном виде
-            salt: str,                    # уникальная соль для пользователя
-            registration_date: datetime,  # дата регистрации пользователя
+            user_id: int,
+            username: str,
+            hashed_password: str,
+            salt: str,
+            registration_date: datetime,
         ):
         """Инициализация пользователя с валидацией."""
         if not username:
@@ -30,17 +30,17 @@ class User:
         """Выводит информацию о пользователе без пароля."""
         return (
             f"ID: {self._user_id}, "
-            "Username: {self._username}, "
-            "Registered: {self._registration_date}"
+            f"Username: {self._username}, "
+            f"Registered: {self._registration_date}"
         )
 
     def change_password(self, new_password: str) -> None:
         """Изменяет пароль с хешированием."""
         if len(new_password) < 4:
             raise ValueError("Пароль должен быть не короче 4 символов")
-        self._hashed_password = (
-            hashlib.sha256((new_password + self._salt).encode()).hexdigest()
-        )
+        self._hashed_password = hashlib.sha256(
+            (new_password + self._salt).encode()
+        ).hexdigest()
 
     def verify_password(self, password: str) -> bool:
         """Проверяет введённый пароль."""
@@ -61,20 +61,25 @@ class User:
             raise ValueError("Имя не может быть пустым")
         self._username = value
 
-    def to_dict(self) -> Dict[str, Any]:#TODO
-        """Сериализация в словарь для JSON с ISO-датой."""
+    def to_dict(self) -> Dict[str, Any]:
+        """Сериализация в словарь для JSON с timestamp "YYYY-MM-DDTHH:MM:SS"."""
         return {
             "user_id": self._user_id,
             "username": self._username,
             "hashed_password": self._hashed_password,
             "salt": self._salt,
-            "registration_date": self._registration_date.isoformat()
+            "registration_date": self._registration_date.strftime("%Y-%m-%dT%H:%M:%S")
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'User':#TODO
+    def from_dict(cls, data: Dict[str, Any]) -> 'User':
         """Десериализация из словаря."""
-        reg_date = datetime.fromisoformat(data["registration_date"])
+        try:
+            reg_date = datetime.strptime(data["registration_date"], "%Y-%m-%dT%H:%M:%S")
+        except ValueError as e:
+            raise ValueError(
+                f"Неверный формат даты регистрации '{data['registration_date']}': {e}"
+            )
         return cls(
             data["user_id"],
             data["username"],
@@ -87,11 +92,7 @@ class User:
 class Wallet:
     """Кошелёк для одной валюты с балансом и операциями."""
 
-    def __init__(
-            self,
-            currency_code: str,    # код валюты (например, "USD", "BTC")
-            balance: float = 0.0,  # баланс в данной валюте (по умолчанию 0.0)
-        ):
+    def __init__(self, currency_code: str, balance: float = 0.0):
         """Инициализация с интеграцией Currency."""
         self.currency: Currency = get_currency(currency_code)
         self._balance = balance
@@ -105,7 +106,7 @@ class Wallet:
         self._balance += amount
 
     def withdraw(self, amount: float) -> None:
-        """Снятие средств с проверкой."""
+        """Снятие средств с проверкой баланса."""
         if amount <= 0:
             raise ValueError("Сумма должна быть положительным числом")
         if not isinstance(amount, (int, float)):
@@ -124,11 +125,14 @@ class Wallet:
 
     @balance.setter
     def balance(self, value: float) -> None:
-        if not isinstance(value, (int, float)) or value < 0:
+        """Сеттер баланса (для прямого присвоения, с проверкой <0)."""
+        if not isinstance(value, (int, float)):
+            raise ValueError("Баланс должен быть числом")
+        if value < 0:
             raise ValueError("Баланс не может быть отрицательным")
         self._balance = value
 
-    def to_dict(self) -> Dict[str, Any]:#TODO
+    def to_dict(self) -> Dict[str, Any]:
         """Сериализация."""
         return {
             "currency_code": self.currency.code,
@@ -136,9 +140,11 @@ class Wallet:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Wallet':#TODO
+    def from_dict(cls, data: Dict[str, Any]) -> 'Wallet':
         """Десериализация."""
-        return cls(data["currency_code"], data["balance"])
+        currency_code = data.get("currency_code")
+        balance = float(data.get("balance", 0.0))
+        return cls(currency_code, balance)
 
 
 class Portfolio:
@@ -146,9 +152,9 @@ class Portfolio:
 
     def __init__(self, user: User):
         """Инициализация с USD по умолчанию."""
-        self._user = user                      # уникальный идентификатор пользователя
-        self._wallets: Dict[str, Wallet] = {}  # словарь кошельков
-        self.add_currency("USD")               # добавляет новый кошелёк в портфель
+        self._user = user
+        self._wallets: Dict[str, Wallet] = {}
+        self.add_currency("USD")
 
     def add_currency(self, currency_code: str) -> None:
         """Добавление нового кошелька."""
@@ -161,17 +167,18 @@ class Portfolio:
         return self._wallets.get(currency_code.upper())
 
     def get_total_value(self, base_currency: str = "USD") -> float:
-        """Общая стоимость в базовой валюте."""
-        if base_currency != "USD":
-            raise ValueError(f"Неизвестная базовая валюта '{base_currency}'")
+        """Общая стоимость в базовой валюте (любая из supported)."""
         total = 0.0
         from .usecases import get_rate
         for code, wallet in self._wallets.items():
             if code == base_currency:
                 total += wallet.balance
             else:
-                rate = get_rate(code, base_currency)
-                total += wallet.balance * rate
+                try:
+                    rate, _ = get_rate(code, base_currency)
+                    total += wallet.balance * rate
+                except ValueError:
+                    pass
         return total
 
     @property
@@ -184,7 +191,7 @@ class Portfolio:
         """Копия словаря кошельков."""
         return self._wallets.copy()
 
-    def to_dict(self) -> Dict[str, Any]:#TODO
+    def to_dict(self) -> Dict[str, Any]:
         """Сериализация."""
         wallets_dict = {
             code: wallet.to_dict() for code, wallet in self._wallets.items()
@@ -195,10 +202,12 @@ class Portfolio:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any], user: User) -> 'Portfolio':#TODO
+    def from_dict(cls, data: Dict[str, Any], user: User) -> 'Portfolio':
         """Десериализация."""
         portfolio = cls(user)
         for code, w_data in data.get("wallets", {}).items():
-            wallet = Wallet.from_dict(w_data)
+            currency_code = w_data.get("currency_code", code)
+            balance = float(w_data.get("balance", 0.0))
+            wallet = Wallet(currency_code, balance)
             portfolio._wallets[code] = wallet
         return portfolio

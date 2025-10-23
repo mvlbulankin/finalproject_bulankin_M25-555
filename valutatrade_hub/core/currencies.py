@@ -61,6 +61,8 @@ class CryptoCurrency(Currency):
 # Инициализация реестра
 register_currency(FiatCurrency("US Dollar", "USD", "United States"))
 register_currency(FiatCurrency("Euro", "EUR", "Eurozone"))
+register_currency(FiatCurrency("Pound Sterling", "GBP", "United Kingdom"))
+register_currency(FiatCurrency("Russian Ruble", "RUB", "Russia"))
 register_currency(CryptoCurrency("Bitcoin", "BTC", "SHA-256", 1.12e12))
 register_currency(CryptoCurrency("Ethereum", "ETH", "Ethash", 4.50e11))
-register_currency(FiatCurrency("Russian Ruble", "RUB", "Russia"))
+register_currency(CryptoCurrency("Solana", "SOL", "Tower BFT", 7.0e10))

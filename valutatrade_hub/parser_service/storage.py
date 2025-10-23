@@ -17,7 +17,7 @@ class Storage:
     def save_rates(self, pairs: Dict[str, Dict[str, Any]]):
         data = {
             "pairs": pairs,
-            "last_refresh": datetime.utcnow().isoformat() + "Z"
+            "last_refresh": datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
         }
         self._atomic_write(self.rates_path, data)
 

@@ -7,8 +7,15 @@ settings = SettingsLoader()
 setup_logging(
     settings.get("log_path", "logs"),
     settings.get("log_level", "INFO"),
+    log_file="actions.log",
+    console=True,
 )
-
+setup_logging(
+    settings.get("log_path", "logs"),
+    settings.get("log_level", "INFO"),
+    log_file="parser.log",
+    console=True,
+)
 
 def main():
     run_cli()

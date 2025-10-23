@@ -34,3 +34,18 @@ def convert_amount(amount: float, from_code: str, to_code: str, rate: float) -> 
     if from_code == to_code:
         return amount
     return amount * rate if rate else 0.0
+
+def load_env_file():
+    project_root = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "..")
+    )
+
+    env_path = os.path.join(project_root, ".env")
+
+    with open(env_path, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('#') or '=' not in line:
+                continue
+            key, value = line.split('=', 1)
+            os.environ[key.strip()] = value.strip()

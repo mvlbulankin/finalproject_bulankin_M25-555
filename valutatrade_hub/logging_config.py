@@ -6,19 +6,31 @@ from pathlib import Path
 from .core.utils import ensure_dir
 
 
-def setup_logging(log_path: str = "logs", level: str = "INFO"):
+def setup_logging(
+        log_path: str = "logs",
+        level: str = "INFO",
+        log_file: str = "actions.log",
+        console: bool = True,
+    ):
     ensure_dir(log_path)
-    log_file = Path(log_path) / "actions.log"
-    handler = RotatingFileHandler(
-        log_file, maxBytes=5*1024*1024, backupCount=5, encoding="utf-8"
+    file_path = Path(log_path) / log_file
+    file_handler = RotatingFileHandler(
+        file_path, maxBytes=5*1024*1024, backupCount=5, encoding="utf-8"
     )
-    formatter = logging.Formatter(
-        '%(asctime)s %(levelname)s %(message)s',
-        datefmt='%Y-%m-%dT%H:%M:%S'
-    )
-    handler.setFormatter(formatter)
-    logger = logging.getLogger("ValutaTrade")
+    formatter = logging.Formatter('%(levelname)s: %(message)s')
+    file_handler.setFormatter(formatter)
+
+    logger_name = "ValutaTrade" if "parser" not in log_file else "ValutaTrade.Parser"
+    logger = logging.getLogger(logger_name)
     logger.setLevel(getattr(logging, level))
-    logger.addHandler(handler)
-    logger.addHandler(logging.StreamHandler(sys.stdout))  # Для консоли
+
+    logger.handlers.clear()
+    logger.propagate = False
+    logger.addHandler(file_handler)
+
+    if console:
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
+
     return logger

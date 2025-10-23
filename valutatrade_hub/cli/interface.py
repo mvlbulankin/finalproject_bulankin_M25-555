@@ -9,7 +9,14 @@ from ..core.exceptions import (
     CurrencyNotFoundError,
     InsufficientFundsError,
 )
-from ..core.usecases import buy, get_rate, login, register, sell, show_portfolio
+from ..core.usecases import (
+    buy,
+    get_rate,
+    login,
+    register,
+    sell,
+    show_portfolio,
+)
 from ..core.utils import load_json
 from ..infra.settings import SettingsLoader
 from ..parser_service.config import ParserConfig
@@ -94,8 +101,12 @@ def run_cli():
                 if current_user_id is None:
                     print("Сначала выполните login")
                     continue
+                base = args_dict.get("base", "USD").upper()
+                if base not in supported:
+                    print(f"Неизвестная базовая валюта '{base}'")
+                    continue
                 try:
-                    output = show_portfolio(current_user_id)
+                    output = show_portfolio(current_user_id, base)
                     print(output)
                 except ValueError as e:
                     print(str(e))
@@ -152,20 +163,20 @@ def run_cli():
                     print("Usage: get-rate --from <str> --to <str>")
                     continue
                 try:
-                    rate = get_rate(from_arg, to_arg)
+                    rate, updated_at = get_rate(from_arg, to_arg)
                     rev_rate = 1 / rate if rate != 0 else 0
-                    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     print(
-                        f"Курс {from_arg}→{to_arg}: {rate:.8f} (обновлено: {now_str})"
+                        f"Курс {from_arg}→{to_arg}: {rate:.8f} "
+                        f"(обновлено: {updated_at})"
                     )
                     print(f"Обратный курс {to_arg}→{from_arg}: {rev_rate:.8f}")
                 except CurrencyNotFoundError as e:
-                    print(
-                        f"{str(e)}. Поддерживаемые: {', '.join(supported)}. "
-                        "Помощь: get-rate --from USD --to BTC"
-                    )
+                    print(f"{str(e)}. Поддерживаемые: {', '.join(supported)}.")
                 except ApiRequestError as e:
-                    print(f"{str(e)}. Повторите попытку позже / проверьте сеть.")
+                    print(
+                        f"Курс {from_arg}→{to_arg} недоступен. "
+                        f"Повторите попытку позже. ({str(e)})"
+                    )
                 except ValueError as e:
                     print(str(e))
             elif command == "update-rates":
@@ -174,15 +185,21 @@ def run_cli():
                 try:
                     updater = RatesUpdater(config)
                     count = updater.run_update(sources)
-                    last_refresh = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
-                    print(
-                        f"Update successful. Total rates updated: {count}. "
-                        f"Last refresh: {last_refresh}"
-                    )
+                    last_refresh = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+                    if count > 0:
+                        print(
+                            f"Update successful. Total rates updated: "
+                            f"{count}. Last refresh: {last_refresh}"
+                        )
+                    else:
+                        print(
+                            "Update completed with errors. "
+                            "Check logs/parser.log for details."
+                        )
                 except Exception as e:
                     print(
-                        f"Update completed with errors. "
-                        f"Check logs for details. Error: {e}"
+                        f"Update failed. Error: {e}. "
+                        "Check logs/parser.log for details."
                     )
             elif command == "show-rates":
                 currency = args_dict.get("currency")
@@ -193,9 +210,14 @@ def run_cli():
                     continue
                 try:
                     rates_data = load_json("rates.json")
+                    if (
+                        isinstance(rates_data, list)
+                        or not rates_data
+                        or "pairs" not in rates_data
+                        or not rates_data["pairs"]
+                    ):
+                        raise FileNotFoundError("Кеш пуст")
                     pairs = rates_data["pairs"]
-                    if not pairs:
-                        raise FileNotFoundError
                     last_update = rates_data.get("last_refresh", "unknown")
                     print(f"Rates from cache (updated at {last_update}):")
                     table = PrettyTable(["Pair", "Rate"])
@@ -240,7 +262,6 @@ def run_cli():
                         print(table)
                         continue
 
-                    # All
                     for pair_usd, p in sorted(pairs.items()):
                         code = pair_usd.split("_")[0]
                         rate_usd = p["rate"]
@@ -255,7 +276,7 @@ def run_cli():
                 except FileNotFoundError:
                     print(
                         "Локальный кеш курсов пуст. "
-                        "Выполните 'update-rates', чтобы загрузить данные."
+                        "Выполните 'update-rates' чтобы загрузить данные."
                     )
                 except json.JSONDecodeError:
                     print("Ошибка чтения кеша курсов. Выполните 'update-rates'.")

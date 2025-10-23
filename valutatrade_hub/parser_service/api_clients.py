@@ -70,8 +70,8 @@ class ExchangeRateApiClient(BaseApiClient):
             rates = {}
             base = self.config.BASE_CURRENCY
             for code in self.config.FIAT_CURRENCIES:
-                if code in data["rates"]:
-                    usd_to_code = data["rates"][code]
+                if code in data["conversion_rates"]:
+                    usd_to_code = data["conversion_rates"][code]
                     rate_code_usd = 1 / usd_to_code if usd_to_code != 0 else 0.0
                     pair = f"{code}_{base}"
                     rates[pair] = {

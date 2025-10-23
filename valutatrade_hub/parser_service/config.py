@@ -2,11 +2,14 @@ import os
 from dataclasses import dataclass, field
 from typing import Dict, Tuple
 
+from ..core.utils import load_env_file
+
+load_env_file()
 
 @dataclass
 class ParserConfig:
     # API ключ из окружения
-    EXCHANGERATE_API_KEY: str = os.getenv("EXCHANGERATE_API_KEY", "key_example")
+    EXCHANGERATE_API_KEY: str = os.getenv("EXCHANGERATE_API_KEY")
 
     # Эндпоинты
     COINGECKO_URL: str = "https://api.coingecko.com/api/v3/simple/price"
@@ -16,11 +19,6 @@ class ParserConfig:
     BASE_CURRENCY: str = "USD"
     FIAT_CURRENCIES: Tuple[str, ...] = ("EUR", "GBP", "RUB")
     CRYPTO_CURRENCIES: Tuple[str, ...] = ("BTC", "ETH", "SOL")
-    # CRYPTO_ID_MAP: Dict[str, str] = {
-    #     "BTC": "bitcoin",
-    #     "ETH": "ethereum",
-    #     "SOL": "solana",
-    # }
     CRYPTO_ID_MAP: Dict[str, str] = field(default_factory=lambda: {
         "BTC": "bitcoin",
         "ETH": "ethereum",

@@ -12,6 +12,14 @@ dependencies = [
     "requests (>=2.32.5,<3.0.0)",
 ]
 
+[tool.valutatrade]
+data_path = "data"
+rates_ttl_seconds = 300
+default_base_currency = "USD"
+log_path = "logs"
+log_level = "INFO"
+supported_currencies = ["USD", "EUR", "GBP", "RUB", "BTC", "ETH", "SOL"]
+
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
